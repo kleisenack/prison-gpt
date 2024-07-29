@@ -43,16 +43,35 @@ def main():
         for i in range(4):
             print("#", games_number)
 
-            for _ in range(2):
-                bot1_chat = _generate_chat(system_message_bot1, messages_from_bot1, messages_from_bot2)
-                bot1_message = _generate_completions(client, bot1_chat)
+            # textmessage
+            bot1_chat = _generate_chat(system_message_bot1, messages_from_bot1, messages_from_bot2)
+            bot1_message = _generate_completions(client, bot1_chat)
 
-                bot2_chat = _generate_chat(system_message_bot2, messages_from_bot2, messages_from_bot1)
-                bot2_message = _generate_completions(client, bot2_chat)
+            bot2_chat = _generate_chat(system_message_bot2, messages_from_bot2, messages_from_bot1)
+            bot2_message = _generate_completions(client, bot2_chat)
 
-                messages_from_bot1.append(bot1_message["content"])
-                messages_from_bot2.append(bot2_message["content"])
+            messages_from_bot1.append(bot1_message["content"])
+            messages_from_bot2.append(bot2_message["content"])
 
+            # decision
+            bot1_chat = _generate_chat(system_message_bot1, messages_from_bot1, messages_from_bot2)
+            bot1_message = _generate_completions(client, bot1_chat)
+            if "C" in bot1_message:
+                bot1_message = "CCC"
+            if "D" in bot1_message:
+                bot1_message = "DDD"
+
+            bot2_chat = _generate_chat(system_message_bot2, messages_from_bot2, messages_from_bot1)
+            bot2_message = _generate_completions(client, bot2_chat)
+            if "C" in bot2_message:
+                bot2_message = "CCC"
+            if "D" in bot2_message:
+                bot2_message = "DDD"
+
+            messages_from_bot1.append(bot1_message["content"])
+            messages_from_bot2.append(bot2_message["content"])
+
+            # tracking result
             bot1_points, bot2_points = _game_matrix(messages_from_bot1[2*i+1], messages_from_bot2[2*i+1])
             turns.append(Turn(
                 game_id=games_number,
