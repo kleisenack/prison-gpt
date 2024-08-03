@@ -1,10 +1,11 @@
+import asyncio
 import pathlib
 from os import getenv
 from time import time
 from typing import Iterable
 
 from dotenv import load_dotenv
-from openai import OpenAI
+from openai import AsyncOpenAI
 from openai.types.chat import ChatCompletionMessageParam
 
 from data_io import write_rounds_to_csv
@@ -18,11 +19,12 @@ if not OPENAI_API_KEY:
 ROOT_PATH = pathlib.Path(__file__).parent.parent.resolve()
 
 
-def main():
-    client = OpenAI(api_key=OPENAI_API_KEY)
+async def main():
+    client = AsyncOpenAI(api_key=OPENAI_API_KEY)
 
     turns: list[Turn] = []
 
+    # Get the bot personalities
     personalities = []
     for i in range(8):
         with open(ROOT_PATH / "messages" / f"role-{i + 1}.md") as f:
@@ -34,15 +36,39 @@ def main():
     system_message_bot1 = general_system_messasge.replace("{ role }", personalities[1])
     system_message_bot2 = general_system_messasge.replace("{ role }", personalities[6])
 
-    for game_id in range(1):
-        turns += _play_game(client, system_message_bot1, system_message_bot2, game_id)
+    # Asynchronously play games
+    queue = asyncio.Queue()
+    for game_id in range(100):
+        await queue.put((system_message_bot1, system_message_bot2, game_id))
 
+    workers = []
+    for i in range(25):
+        workers.append(asyncio.create_task(_worker(i, queue, client, turns)))
+
+    await queue.join()
+
+    for worker in workers:
+        worker.cancel()
+
+    # Write the results to a CSV file
     write_rounds_to_csv(turns, "games.csv")
 
 
-def _play_game(client: OpenAI, system_message_bot1: str, system_message_bot2: str, game_id: int) -> list[Turn]:
-    print(f"Playing game #{game_id}")
+async def _worker(w_id: int, queue: asyncio.Queue, client: AsyncOpenAI, turns: list[Turn]):
+    while True:
+        system_message_bot1, system_message_bot2, game_id = await queue.get()
+        print(f"Worker {w_id} started playing game #{game_id}")
+        turns += await _play_game(client, system_message_bot1, system_message_bot2, game_id)
+        queue.task_done()
+        print(f"Worker {w_id} finished game #{game_id}")
 
+
+async def _play_game(
+    client: AsyncOpenAI,
+    system_message_bot1: str,
+    system_message_bot2: str,
+    game_id: int
+) -> list[Turn]:
     turns: list[Turn] = []
     messages_from_bot1: list[str] = []
     decisions_from_bot1: list[Decision] = []
@@ -53,11 +79,11 @@ def _play_game(client: OpenAI, system_message_bot1: str, system_message_bot2: st
         # textmessage
         bot1_chat = _generate_chat(system_message_bot1, messages_from_bot1, decisions_from_bot1, messages_from_bot2,
                                    decisions_from_bot2)
-        bot1_message = _generate_completions(client, bot1_chat)
+        bot1_message = await _generate_completions(client, bot1_chat)
 
         bot2_chat = _generate_chat(system_message_bot2, messages_from_bot2, decisions_from_bot2, messages_from_bot1,
                                    decisions_from_bot1)
-        bot2_message = _generate_completions(client, bot2_chat)
+        bot2_message = await _generate_completions(client, bot2_chat)
 
         messages_from_bot1.append(bot1_message["content"])
         messages_from_bot2.append(bot2_message["content"])
@@ -65,7 +91,7 @@ def _play_game(client: OpenAI, system_message_bot1: str, system_message_bot2: st
         # decision
         bot1_chat = _generate_chat(system_message_bot1, messages_from_bot1, decisions_from_bot1, messages_from_bot2,
                                    decisions_from_bot2)
-        bot1_decision_message = _generate_completions(client, bot1_chat)["content"]
+        bot1_decision_message = (await _generate_completions(client, bot1_chat))["content"]
         if "C" in bot1_decision_message:
             bot1_decision = "CCC"
         elif "D" in bot1_decision_message:
@@ -75,7 +101,7 @@ def _play_game(client: OpenAI, system_message_bot1: str, system_message_bot2: st
 
         bot2_chat = _generate_chat(system_message_bot2, messages_from_bot2, decisions_from_bot2, messages_from_bot1,
                                    decisions_from_bot1)
-        bot2_decision_message = _generate_completions(client, bot2_chat)["content"]
+        bot2_decision_message = (await _generate_completions(client, bot2_chat))["content"]
         if "C" in bot2_decision_message:
             bot2_decision = "CCC"
         elif "D" in bot2_decision_message:
@@ -104,11 +130,11 @@ def _play_game(client: OpenAI, system_message_bot1: str, system_message_bot2: st
 
 
 def _generate_chat(
-        system_message: str,
-        me_bot_messages: list[str],
-        me_bot_decisions: list[Decision],
-        you_bot_messages: list[str],
-        you_bot_decisions: list[Decision],
+    system_message: str,
+    me_bot_messages: list[str],
+    me_bot_decisions: list[Decision],
+    you_bot_messages: list[str],
+    you_bot_decisions: list[Decision],
 ) -> list[ChatCompletionMessageParam]:
     with open(ROOT_PATH / "messages" / "message_instruction_forget.md") as f:
         message_instruction_forget = f.read()
@@ -173,8 +199,8 @@ def _game_matrix(bot1_decision: Decision, bot2_decision: Decision) -> tuple[int,
     raise ValueError(f"Invalid decision: {bot1_decision} | {bot2_decision}")
 
 
-def _generate_completions(client: OpenAI, chat: Iterable[ChatCompletionMessageParam]) -> dict:
-    completion = client.chat.completions.create(
+async def _generate_completions(client: AsyncOpenAI, chat: Iterable[ChatCompletionMessageParam]) -> dict:
+    completion = await client.chat.completions.create(
         model="gpt-4o-mini",
         messages=chat
     )
@@ -185,5 +211,5 @@ def _generate_completions(client: OpenAI, chat: Iterable[ChatCompletionMessagePa
 
 if __name__ == "__main__":
     start_time = time()
-    main()
+    asyncio.run(main())
     print((time() - start_time) / 60)
