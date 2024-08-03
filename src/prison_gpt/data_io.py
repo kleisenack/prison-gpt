@@ -1,19 +1,6 @@
 import csv
-from typing import Literal
 
-from pydantic import BaseModel
-
-
-class Turn(BaseModel):
-    game_id: int
-    turn: int
-    text1: str
-    text2: str
-    decision1: Literal["CCC", "DDD"]
-    decision2: Literal["CCC", "DDD"]
-    points1: int
-    points2: int
-    public_good: bool
+from own_types import Turn
 
 
 def write_rounds_to_csv(turns: list[Turn], path: str):
