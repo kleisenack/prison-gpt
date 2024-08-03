@@ -26,14 +26,14 @@ def main():
     turns: list[Turn] = []
 
     personalities = []
-    for i in range(7):
+    for i in range(8):
         with open(ROOT_PATH / "messages" / f"role-{i+1}.md") as f:
             personalities.append(f.read())
 
     with open(ROOT_PATH / "messages" / "system.md") as f:
         general_system_messasge = f.read()
 
-    system_message_bot1 = general_system_messasge.replace("{ role }", personalities[3])
+    system_message_bot1 = general_system_messasge.replace("{ role }", personalities[1])
     system_message_bot2 = general_system_messasge.replace("{ role }", personalities[6])
 
     for games_number in range(100):
