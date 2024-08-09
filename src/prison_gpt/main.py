@@ -51,7 +51,7 @@ async def main():
         worker.cancel()
 
     # Write the results to a CSV file
-    write_rounds_to_csv(turns, "games.csv")
+    write_rounds_to_csv(turns, "game.csv")
 
 
 async def _worker(w_id: int, queue: asyncio.Queue, client: AsyncOpenAI, turns: list[Turn]):
