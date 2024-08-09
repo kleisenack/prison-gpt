@@ -33,8 +33,8 @@ async def main():
     with open(ROOT_PATH / "messages" / "system.md") as f:
         general_system_messasge = f.read()
 
-    system_message_bot1 = general_system_messasge.replace("{ role }", personalities[1])
-    system_message_bot2 = general_system_messasge.replace("{ role }", personalities[6])
+    system_message_bot1 = general_system_messasge.replace("{ role }", personalities[0])
+    system_message_bot2 = general_system_messasge.replace("{ role }", personalities[7])
 
     # Asynchronously play games
     queue = asyncio.Queue()
@@ -51,7 +51,7 @@ async def main():
         worker.cancel()
 
     # Write the results to a CSV file
-    write_rounds_to_csv(turns, "game.csv")
+    write_rounds_to_csv(turns, "../games/game-1-8.csv")
 
 
 async def _worker(w_id: int, queue: asyncio.Queue, client: AsyncOpenAI, turns: list[Turn]):
