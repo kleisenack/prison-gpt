@@ -1,11 +1,14 @@
 from textblob import TextBlob
 import pathlib
 import csv
-import nltk
 from nltk.corpus import stopwords
 from nltk.stem import PorterStemmer
 import re
 import string
+import matplotlib
+import matplotlib.pyplot as plt
+
+from src.prison_gpt.own_types import Turn
 
 
 def remove_emojis(input_string):
@@ -57,25 +60,25 @@ GAME_PATH = ROOT_PATH / "games"
 # nltk.download("punkt")
 # nltk.download("stopwords")
 
-texts1 = ""
-texts2 = ""
+
+turns = []
+
 
 with open(GAME_PATH / "game-1-8.csv") as f:
     csv_reader = csv.DictReader(f, delimiter=";")
     for row in csv_reader:
-        texts1 += row["text1"]
-        texts2 += row["text2"]
+        turn = Turn(**row)
+        turns.append(turn)
 
-words1 = normalize(texts1)
-words2 = normalize(texts2)
 
-sorted_words1 = get_word_count(words1)
-sorted_words2 = get_word_count(words2)
+for i in range(4):
+    plt.hist([TextBlob(turn.text1).sentiment.polarity for turn in turns if turn.turn == i], label=f"Turn {i}", alpha=0.2)
+plt.legend(loc='upper right')
+plt.savefig('plot1.png', dpi=300)
 
-for i in range(20, 0, -1):
-    print(f"{sorted_words1[i][0]}: {sorted_words1[i][1]} | {sorted_words2[i][0]}: {sorted_words2[i][1]}")
+plt.close()
 
-s1 = TextBlob(texts1)
-s2 = TextBlob(texts2)
-print(s1.sentiment)
-print(s2.sentiment)
+for i in range(4):
+    plt.hist([TextBlob(turn.text2).sentiment.polarity for turn in turns if turn.turn == i], label=f"Turn {i}", alpha=0.2)
+plt.legend(loc='upper right')
+plt.savefig('plot2.png', dpi=300)
