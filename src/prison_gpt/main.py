@@ -11,6 +11,15 @@ from openai.types.chat import ChatCompletionMessageParam
 from data_io import write_rounds_to_csv
 from own_types import Turn, Decision
 
+# Settings to configure runs at one place
+
+game_rule_prompt = "system-num.md"
+first_role = 3 # role number, not list index
+second_role = 6 # role number, not list index
+output_filename = "..\games\game-3-6-num.csv"
+
+# Real code starts here
+
 load_dotenv()
 OPENAI_API_KEY = getenv("OPENAI_API_KEY")
 if not OPENAI_API_KEY:
@@ -30,11 +39,11 @@ async def main():
         with open(ROOT_PATH / "messages" / f"role-{i + 1}.md") as f:
             personalities.append(f.read())
 
-    with open(ROOT_PATH / "messages" / "system.md") as f:
+    with open(ROOT_PATH / "messages" / game_rule_prompt) as f:
         general_system_messasge = f.read()
 
-    system_message_bot1 = general_system_messasge.replace("{ role }", personalities[0])
-    system_message_bot2 = general_system_messasge.replace("{ role }", personalities[7])
+    system_message_bot1 = general_system_messasge.replace("{ role }", personalities[first_role - 1])
+    system_message_bot2 = general_system_messasge.replace("{ role }", personalities[second_role - 2])
 
     # Asynchronously play games
     queue = asyncio.Queue()
@@ -51,7 +60,7 @@ async def main():
         worker.cancel()
 
     # Write the results to a CSV file
-    write_rounds_to_csv(turns, "../games/game-1-8.csv")
+    write_rounds_to_csv(turns, output_filename)
 
 
 async def _worker(w_id: int, queue: asyncio.Queue, client: AsyncOpenAI, turns: list[Turn]):
