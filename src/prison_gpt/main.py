@@ -15,7 +15,7 @@ from own_types import Turn, Decision
 GAME_RULE_PROMPT = "system-num.md"
 FIRST_ROLE = 2  # role number, not list index
 SECOND_ROLE = 7  # role number, not list index
-BRIDGE_FEEDBACK = True
+BRIDGE_FEEDBACK = False
 OUTPUT_FILENAME = f"game-{FIRST_ROLE}-{SECOND_ROLE}-num-{BRIDGE_FEEDBACK}.csv"
 
 # Real code starts here

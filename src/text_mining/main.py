@@ -55,7 +55,6 @@ def get_word_count(words: list[str]) -> list[tuple[str, int]]:
 
 
 ROOT_PATH = pathlib.Path(__file__).parent.parent.resolve()
-GAME_PATH = ROOT_PATH / "data"
 
 # nltk.download("punkt")
 # nltk.download("stopwords")
@@ -64,7 +63,14 @@ GAME_PATH = ROOT_PATH / "data"
 turns = []
 
 
-with open(GAME_PATH / "game-1-8.csv") as f:
+PLAYER_ONE = 2
+PLAYER_TWO = 7
+
+GAME = f"game-{PLAYER_ONE}-{PLAYER_TWO}-num-False"
+GAME_PATH = ROOT_PATH / "data" / f"{GAME}.csv"
+
+
+with open(GAME_PATH) as f:
     csv_reader = csv.DictReader(f, delimiter=";")
     for row in csv_reader:
         turn = Turn(**row)
@@ -74,11 +80,13 @@ with open(GAME_PATH / "game-1-8.csv") as f:
 for i in range(4):
     plt.hist([TextBlob(turn.text1).sentiment.polarity for turn in turns if turn.turn == i], label=f"Turn {i}", alpha=0.2)
 plt.legend(loc='upper right')
-plt.savefig('plot1.png', dpi=300)
+plt.title(f"{GAME} Player 1")
+plt.savefig(f'plot-{GAME}-player-1.png', dpi=300)
 
 plt.close()
 
 for i in range(4):
     plt.hist([TextBlob(turn.text2).sentiment.polarity for turn in turns if turn.turn == i], label=f"Turn {i}", alpha=0.2)
 plt.legend(loc='upper right')
-plt.savefig('plot2.png', dpi=300)
+plt.title(f"{GAME} Player 2")
+plt.savefig(f'plot-{GAME}-player-2.png', dpi=300)
