@@ -13,9 +13,10 @@ from own_types import Turn, Decision
 
 # Settings to configure runs at one place
 GAME_RULE_PROMPT = "system-num.md"
-FIRST_ROLE = 3  # role number, not list index
-SECOND_ROLE = 6  # role number, not list index
-OUTPUT_FILENAME = "game-3-6-num.csv"
+FIRST_ROLE = 2  # role number, not list index
+SECOND_ROLE = 7  # role number, not list index
+BRIDGE_FEEDBACK = True
+OUTPUT_FILENAME = f"game-{FIRST_ROLE}-{SECOND_ROLE}-num-{BRIDGE_FEEDBACK}.csv"
 
 # Real code starts here
 
@@ -192,12 +193,23 @@ def _generate_chat(
 def _game_feedback(me_bot_decision: Decision, you_bot_decision: Decision) -> str:
     with open(ROOT_PATH / "messages" / "decision_instruction_keep.md") as f:
         decision_instruction_keep = f.read()
+    with open(ROOT_PATH / "messages" / "public_good_provided.md") as f:
+        public_good_provided_message = f.read()
+    with open(ROOT_PATH / "messages" / "public_good_not_provided.md") as f:
+        public_good_not_provided_message = f.read()
 
-    decision_instruction_keep = decision_instruction_keep.replace("[me_decision]", me_bot_decision)
-    decision_instruction_keep = decision_instruction_keep.replace("[you_decision]", you_bot_decision)
+    me_bot_points, you_bot_points = _game_matrix(me_bot_decision, you_bot_decision)
 
-    me_bot_points, _ = _game_matrix(me_bot_decision, you_bot_decision)
-    return decision_instruction_keep.replace("[me_points]", str(me_bot_points))
+    decision_instruction_keep = decision_instruction_keep.replace("[ me_decision ]", me_bot_decision)
+    decision_instruction_keep = decision_instruction_keep.replace("[ you_decision ]", you_bot_decision)
+
+    decision_instruction_keep = decision_instruction_keep.replace("[ me_points ]", str(me_bot_points))
+
+    if BRIDGE_FEEDBACK:
+        public_good_message = public_good_provided_message if me_bot_points == 3 and you_bot_points == 3 else public_good_not_provided_message
+        decision_instruction_keep = decision_instruction_keep.replace("[ public_good_message ]", public_good_message)
+
+    return decision_instruction_keep
 
 
 def _game_matrix(bot1_decision: Decision, bot2_decision: Decision) -> tuple[int, int]:
@@ -221,7 +233,6 @@ async def _generate_completions(client: AsyncOpenAI, chat: Iterable[ChatCompleti
 
 
 if __name__ == "__main__":
-    # start_time = time()
-    # asyncio.run(main())
-    # print((time() - start_time) / 60)
-    pass
+    start_time = time()
+    asyncio.run(main())
+    print((time() - start_time) / 60)
