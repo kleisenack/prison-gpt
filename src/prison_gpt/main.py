@@ -44,7 +44,7 @@ async def main():
         general_system_messasge = f.read()
 
     system_message_bot1 = general_system_messasge.replace("{ role }", personalities[FIRST_ROLE - 1])
-    system_message_bot2 = general_system_messasge.replace("{ role }", personalities[SECOND_ROLE - 2])
+    system_message_bot2 = general_system_messasge.replace("{ role }", personalities[SECOND_ROLE - 1])
 
     # Asynchronously play data
     queue = asyncio.Queue()
