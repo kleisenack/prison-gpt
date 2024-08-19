@@ -2,7 +2,6 @@ import asyncio
 import pathlib
 from os import getenv
 from time import time
-from typing import Iterable
 
 from dotenv import load_dotenv
 from openai import AsyncOpenAI
@@ -10,13 +9,14 @@ from openai.types.chat import ChatCompletionMessageParam
 
 from data_io import write_rounds_to_csv
 from own_types import Turn, Decision
+from typing import Iterable
 
 # Settings to configure runs at one place
 
 game_rule_prompt = "system-num.md"
 first_role = 3 # role number, not list index
 second_role = 6 # role number, not list index
-output_filename = "..\games\game-3-6-num.csv"
+output_filename = "../data\game-3-6-num.csv"
 
 # Real code starts here
 
@@ -29,7 +29,9 @@ ROOT_PATH = pathlib.Path(__file__).parent.parent.resolve()
 
 
 async def main():
-    client = AsyncOpenAI(api_key=OPENAI_API_KEY)
+    client = AsyncOpenAI(
+        api_key=OPENAI_API_KEY
+    )
 
     turns: list[Turn] = []
 
@@ -45,7 +47,7 @@ async def main():
     system_message_bot1 = general_system_messasge.replace("{ role }", personalities[first_role - 1])
     system_message_bot2 = general_system_messasge.replace("{ role }", personalities[second_role - 2])
 
-    # Asynchronously play games
+    # Asynchronously play data
     queue = asyncio.Queue()
     for game_id in range(100):
         await queue.put((system_message_bot1, system_message_bot2, game_id))
@@ -73,10 +75,7 @@ async def _worker(w_id: int, queue: asyncio.Queue, client: AsyncOpenAI, turns: l
 
 
 async def _play_game(
-    client: AsyncOpenAI,
-    system_message_bot1: str,
-    system_message_bot2: str,
-    game_id: int
+    client: AsyncOpenAI, system_message_bot1: str, system_message_bot2: str, game_id: int
 ) -> list[Turn]:
     turns: list[Turn] = []
     messages_from_bot1: list[str] = []
@@ -86,20 +85,23 @@ async def _play_game(
 
     for i in range(4):
         # textmessage
-        bot1_chat = _generate_chat(system_message_bot1, messages_from_bot1, decisions_from_bot1, messages_from_bot2,
-                                   decisions_from_bot2)
+        bot1_chat = _generate_chat(
+            system_message_bot1, messages_from_bot1, decisions_from_bot1, messages_from_bot2, decisions_from_bot2
+        )
         bot1_message = await _generate_completions(client, bot1_chat)
 
-        bot2_chat = _generate_chat(system_message_bot2, messages_from_bot2, decisions_from_bot2, messages_from_bot1,
-                                   decisions_from_bot1)
+        bot2_chat = _generate_chat(
+            system_message_bot2, messages_from_bot2, decisions_from_bot2, messages_from_bot1, decisions_from_bot1
+        )
         bot2_message = await _generate_completions(client, bot2_chat)
 
         messages_from_bot1.append(bot1_message["content"])
         messages_from_bot2.append(bot2_message["content"])
 
         # decision
-        bot1_chat = _generate_chat(system_message_bot1, messages_from_bot1, decisions_from_bot1, messages_from_bot2,
-                                   decisions_from_bot2)
+        bot1_chat = _generate_chat(
+            system_message_bot1, messages_from_bot1, decisions_from_bot1, messages_from_bot2, decisions_from_bot2
+        )
         bot1_decision_message = (await _generate_completions(client, bot1_chat))["content"]
         if "C" in bot1_decision_message:
             bot1_decision = "CCC"
@@ -108,8 +110,9 @@ async def _play_game(
         else:
             raise ValueError(f"Invalid decision: {bot1_decision_message}")
 
-        bot2_chat = _generate_chat(system_message_bot2, messages_from_bot2, decisions_from_bot2, messages_from_bot1,
-                                   decisions_from_bot1)
+        bot2_chat = _generate_chat(
+            system_message_bot2, messages_from_bot2, decisions_from_bot2, messages_from_bot1, decisions_from_bot1
+        )
         bot2_decision_message = (await _generate_completions(client, bot2_chat))["content"]
         if "C" in bot2_decision_message:
             bot2_decision = "CCC"
@@ -123,17 +126,19 @@ async def _play_game(
 
         # tracking result
         bot1_points, bot2_points = _game_matrix(decisions_from_bot1[i], decisions_from_bot2[i])
-        turns.append(Turn(
-            game_id=game_id,
-            turn=i,
-            text1=messages_from_bot1[i],
-            text2=messages_from_bot2[i],
-            decision1=decisions_from_bot1[i],
-            decision2=decisions_from_bot2[i],
-            points1=bot1_points,
-            points2=bot2_points,
-            public_good=(bot1_points == 3 and bot2_points == 3),
-        ))
+        turns.append(
+            Turn(
+                game_id=game_id,
+                turn=i,
+                text1=messages_from_bot1[i],
+                text2=messages_from_bot2[i],
+                decision1=decisions_from_bot1[i],
+                decision2=decisions_from_bot2[i],
+                points1=bot1_points,
+                points2=bot2_points,
+                public_good=(bot1_points == 3 and bot2_points == 3),
+            )
+        )
 
     return turns
 
@@ -165,7 +170,8 @@ def _generate_chat(
         if i < len(me_bot_messages):
             chat.append({"role": "assistant", "content": me_bot_messages[i]})
             chat.append(
-                {"role": "user", "content": message_instruction_keep.replace("[ message ]", you_bot_messages[i])})
+                {"role": "user", "content": message_instruction_keep.replace("[ message ]", you_bot_messages[i])}
+            )
 
         # Decisions
         if i < len(me_bot_decisions):
@@ -209,10 +215,7 @@ def _game_matrix(bot1_decision: Decision, bot2_decision: Decision) -> tuple[int,
 
 
 async def _generate_completions(client: AsyncOpenAI, chat: Iterable[ChatCompletionMessageParam]) -> dict:
-    completion = await client.chat.completions.create(
-        model="gpt-4o-mini",
-        messages=chat
-    )
+    completion = await client.chat.completions.create(model="gpt-4o-mini", messages=chat)
     message = completion.choices[0].message
 
     return {"role": message.role, "content": message.content}
