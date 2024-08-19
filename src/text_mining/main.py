@@ -55,7 +55,7 @@ def get_word_count(words: list[str]) -> list[tuple[str, int]]:
 
 
 ROOT_PATH = pathlib.Path(__file__).parent.parent.resolve()
-GAME_PATH = ROOT_PATH / "games"
+GAME_PATH = ROOT_PATH / "data"
 
 # nltk.download("punkt")
 # nltk.download("stopwords")
