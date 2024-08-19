@@ -1,9 +1,10 @@
 import csv
+from pathlib import Path
 
 from own_types import Turn
 
 
-def write_rounds_to_csv(turns: list[Turn], path: str):
+def write_rounds_to_csv(turns: list[Turn], path: Path):
     with open(path, "w", newline="", encoding='utf-8') as f:
         writer = csv.DictWriter(f, delimiter=";", fieldnames=Turn.__fields__)
         writer.writeheader()

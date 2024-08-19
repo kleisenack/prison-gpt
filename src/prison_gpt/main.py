@@ -2,6 +2,7 @@ import asyncio
 import pathlib
 from os import getenv
 from time import time
+from typing import Iterable
 
 from dotenv import load_dotenv
 from openai import AsyncOpenAI
@@ -9,14 +10,12 @@ from openai.types.chat import ChatCompletionMessageParam
 
 from data_io import write_rounds_to_csv
 from own_types import Turn, Decision
-from typing import Iterable
 
 # Settings to configure runs at one place
-
-game_rule_prompt = "system-num.md"
-first_role = 3 # role number, not list index
-second_role = 6 # role number, not list index
-output_filename = "../data\game-3-6-num.csv"
+GAME_RULE_PROMPT = "system-num.md"
+FIRST_ROLE = 3  # role number, not list index
+SECOND_ROLE = 6  # role number, not list index
+OUTPUT_FILENAME = "game-3-6-num.csv"
 
 # Real code starts here
 
@@ -41,11 +40,11 @@ async def main():
         with open(ROOT_PATH / "messages" / f"role-{i + 1}.md") as f:
             personalities.append(f.read())
 
-    with open(ROOT_PATH / "messages" / game_rule_prompt) as f:
+    with open(ROOT_PATH / "messages" / GAME_RULE_PROMPT) as f:
         general_system_messasge = f.read()
 
-    system_message_bot1 = general_system_messasge.replace("{ role }", personalities[first_role - 1])
-    system_message_bot2 = general_system_messasge.replace("{ role }", personalities[second_role - 2])
+    system_message_bot1 = general_system_messasge.replace("{ role }", personalities[FIRST_ROLE - 1])
+    system_message_bot2 = general_system_messasge.replace("{ role }", personalities[SECOND_ROLE - 2])
 
     # Asynchronously play data
     queue = asyncio.Queue()
@@ -62,7 +61,7 @@ async def main():
         worker.cancel()
 
     # Write the results to a CSV file
-    write_rounds_to_csv(turns, output_filename)
+    write_rounds_to_csv(turns, ROOT_PATH / "data" / OUTPUT_FILENAME)
 
 
 async def _worker(w_id: int, queue: asyncio.Queue, client: AsyncOpenAI, turns: list[Turn]):
@@ -75,7 +74,7 @@ async def _worker(w_id: int, queue: asyncio.Queue, client: AsyncOpenAI, turns: l
 
 
 async def _play_game(
-    client: AsyncOpenAI, system_message_bot1: str, system_message_bot2: str, game_id: int
+        client: AsyncOpenAI, system_message_bot1: str, system_message_bot2: str, game_id: int
 ) -> list[Turn]:
     turns: list[Turn] = []
     messages_from_bot1: list[str] = []
@@ -144,11 +143,11 @@ async def _play_game(
 
 
 def _generate_chat(
-    system_message: str,
-    me_bot_messages: list[str],
-    me_bot_decisions: list[Decision],
-    you_bot_messages: list[str],
-    you_bot_decisions: list[Decision],
+        system_message: str,
+        me_bot_messages: list[str],
+        me_bot_decisions: list[Decision],
+        you_bot_messages: list[str],
+        you_bot_decisions: list[Decision],
 ) -> list[ChatCompletionMessageParam]:
     with open(ROOT_PATH / "messages" / "message_instruction_forget.md") as f:
         message_instruction_forget = f.read()
@@ -222,6 +221,7 @@ async def _generate_completions(client: AsyncOpenAI, chat: Iterable[ChatCompleti
 
 
 if __name__ == "__main__":
-    start_time = time()
-    asyncio.run(main())
-    print((time() - start_time) / 60)
+    # start_time = time()
+    # asyncio.run(main())
+    # print((time() - start_time) / 60)
+    pass
