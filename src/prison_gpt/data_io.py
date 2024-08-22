@@ -1,7 +1,7 @@
 import csv
 from pathlib import Path
 
-from own_types import Turn
+from .own_types import Turn
 
 
 def write_rounds_to_csv(turns: list[Turn], path: Path):

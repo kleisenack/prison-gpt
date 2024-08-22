@@ -8,8 +8,8 @@ from dotenv import load_dotenv
 from openai import AsyncOpenAI
 from openai.types.chat import ChatCompletionMessageParam
 
-from data_io import write_rounds_to_csv
-from own_types import Turn, Decision
+from .data_io import write_rounds_to_csv
+from .own_types import Turn, Decision
 
 # Settings to configure runs at one place
 GAME_RULE_PROMPT = "system-num.md"

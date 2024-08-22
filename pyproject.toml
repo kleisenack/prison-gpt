@@ -28,7 +28,8 @@ venv = ".venv"
 select = ["E4", "E7", "E9", "F", "C", "N", "A", "SIM", "PL"]
 
 [tool.rye.scripts]
-dev = "python3 -m chat_prison.main"
+play = "python3 -m src.prison_gpt.main"
+analyze = "python3 -m src.text_mining.main"
 
 [build-system]
 requires = ["hatchling"]
