@@ -81,7 +81,7 @@ for i in range(4):
     plt.hist([TextBlob(turn.text1).sentiment.polarity for turn in turns if turn.turn == i], label=f"Turn {i}", alpha=0.2)
 plt.legend(loc='upper right')
 plt.title(f"{GAME} Player 1")
-plt.savefig(f'plot-{GAME}-player-1.png', dpi=300)
+plt.savefig(ROOT_PATH / "data" / f'plot-{GAME}-player-1.png', dpi=300)
 
 plt.close()
 
@@ -89,4 +89,4 @@ for i in range(4):
     plt.hist([TextBlob(turn.text2).sentiment.polarity for turn in turns if turn.turn == i], label=f"Turn {i}", alpha=0.2)
 plt.legend(loc='upper right')
 plt.title(f"{GAME} Player 2")
-plt.savefig(f'plot-{GAME}-player-2.png', dpi=300)
+plt.savefig(ROOT_PATH / "data" / f'plot-{GAME}-player-2.png', dpi=300)

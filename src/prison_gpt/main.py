@@ -38,7 +38,7 @@ async def main():
     # Get the bot personalities
     personalities = []
     for i in range(8):
-        with open(ROOT_PATH / "messages" / f"role-{i + 1}.md") as f:
+        with open(ROOT_PATH / "messages" / "roles" / f"role-{i + 1}.md") as f:
             personalities.append(f.read())
 
     with open(ROOT_PATH / "messages" / GAME_RULE_PROMPT) as f:
