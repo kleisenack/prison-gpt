@@ -6,11 +6,11 @@ authors = [
     { name = "2mal3", email = "56305732+2mal3@users.noreply.github.com" },
 ]
 dependencies = [
-    "openai==1.*",
+    "openai==1.37.*",
     "python-dotenv==1.0.*",
     "pydantic==2.8.*",
     "textblob==0.18.*",
-    "matplotlib>=3.9.1.post1",
+    "matplotlib==3.9.*",
 ]
 readme = "README.md"
 requires-python = ">= 3.8"
@@ -37,6 +37,7 @@ build-backend = "hatchling.build"
 
 [tool.rye]
 managed = true
+virutal = true
 dev-dependencies = []
 
 [tool.hatch.metadata]
