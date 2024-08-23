@@ -1,6 +1,6 @@
 import asyncio
 import pathlib
-from os import getenv
+from os import getenv, path
 from time import time
 from typing import Iterable
 
@@ -49,11 +49,7 @@ async def main():
 
     turns: list[Turn] = []
 
-    # Get the bot personalities
-    personalities = []
-    for i in range(8):
-        with open(ROOT_PATH / "messages" / "roles" / f"role-{i + 1}.md") as f:
-            personalities.append(f.read())
+    personalities = _load_personalities()
 
     with open(ROOT_PATH / "messages" / GAME_RULE_PROMPT) as f:
         general_system_messasge = f.read()
@@ -77,6 +73,22 @@ async def main():
 
     # Write the results to a CSV file
     write_rounds_to_csv(turns, ROOT_PATH / "data" / OUTPUT_FILENAME)
+
+
+# Get the bot personalities
+def _load_personalities() -> list[str]:
+    personalities = []
+    i = 1
+    file_path = ROOT_PATH / "messages" / "roles" / f"role-{i}.md"
+
+    while path.exists(file_path):
+        with open(file_path) as f:
+            personalities.append(f.read())
+
+        i += 1
+        file_path = ROOT_PATH / "messages" / "roles" / f"role-{i}.md"
+
+    return personalities
 
 
 async def _worker(w_id: int, queue: asyncio.Queue, client: AsyncOpenAI, turns: list[Turn]):
@@ -224,9 +236,6 @@ def _game_feedback(me_bot_decision: Decision, you_bot_decision: Decision) -> str
         decision_instruction_keep = decision_instruction_keep.replace("[ public_good_message ]", public_good_message)
 
     return decision_instruction_keep
-
-
-)
 
 
 async def _generate_completions(client: AsyncOpenAI, chat: Iterable[ChatCompletionMessageParam]) -> dict:
