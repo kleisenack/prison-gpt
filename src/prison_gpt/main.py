@@ -13,10 +13,25 @@ from .own_types import Turn, Decision
 
 # Settings to configure runs at one place
 GAME_RULE_PROMPT = "system-num.md"
-FIRST_ROLE = 2  # role number, not list index
-SECOND_ROLE = 7  # role number, not list index
-BRIDGE_FEEDBACK = False
-OUTPUT_FILENAME = f"game-{FIRST_ROLE}-{SECOND_ROLE}-num-{BRIDGE_FEEDBACK}.csv"
+PUBLIC_GOOD_FEEDBACK = True
+# role number, equivalent to the number of role file
+FIRST_ROLE = 2
+SECOND_ROLE = 7
+OUTPUT_FILENAME = f"game-{FIRST_ROLE}-{SECOND_ROLE}-num-{PUBLIC_GOOD_FEEDBACK}.csv"
+
+
+def _game_matrix(bot1_decision: Decision, bot2_decision: Decision) -> tuple[int, int]:
+    if "CCC" in bot1_decision and "CCC" in bot2_decision:
+        return 3, 3
+    if "DDD" in bot1_decision and "DDD" in bot2_decision:
+        return 2, 2
+    if "DDD" in bot1_decision and "CCC" in bot2_decision:
+        return 4, 1
+    if "CCC" in bot1_decision and "DDD" in bot2_decision:
+        return 1, 4
+
+    raise ValueError(f"Invalid decision: {bot1_decision} | {bot2_decision}")
+
 
 # Real code starts here
 
@@ -26,7 +41,6 @@ if not OPENAI_API_KEY:
     raise ValueError("OPENAI_API_KEY is not set")
 
 ROOT_PATH = pathlib.Path(__file__).parent.parent.resolve()
-
 
 async def main():
     client = AsyncOpenAI(
@@ -205,24 +219,14 @@ def _game_feedback(me_bot_decision: Decision, you_bot_decision: Decision) -> str
 
     decision_instruction_keep = decision_instruction_keep.replace("[ me_points ]", str(me_bot_points))
 
-    if BRIDGE_FEEDBACK:
+    if PUBLIC_GOOD_FEEDBACK:
         public_good_message = public_good_provided_message if me_bot_points == 3 and you_bot_points == 3 else public_good_not_provided_message
         decision_instruction_keep = decision_instruction_keep.replace("[ public_good_message ]", public_good_message)
 
     return decision_instruction_keep
 
 
-def _game_matrix(bot1_decision: Decision, bot2_decision: Decision) -> tuple[int, int]:
-    if "CCC" in bot1_decision and "CCC" in bot2_decision:
-        return 3, 3
-    if "DDD" in bot1_decision and "DDD" in bot2_decision:
-        return 2, 2
-    if "DDD" in bot1_decision and "CCC" in bot2_decision:
-        return 4, 1
-    if "CCC" in bot1_decision and "DDD" in bot2_decision:
-        return 1, 4
-
-    raise ValueError(f"Invalid decision: {bot1_decision} | {bot2_decision}")
+)
 
 
 async def _generate_completions(client: AsyncOpenAI, chat: Iterable[ChatCompletionMessageParam]) -> dict:
